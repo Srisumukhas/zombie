@@ -6,8 +6,14 @@ var heart1, heart2, heart3;
 var heart1Img, heart2Img, heart3Img;
 var lives=3
 var explosionSound
+var loseSound
 
 var zombieGroup;
+var PLAY=0;
+var END = 1;
+var gameState=PLAY
+
+var gameOver
 
 
 
@@ -25,7 +31,8 @@ function preload(){
 
   bgImg = loadImage("assets/bg.jpeg")
   explosionSound=loadSound("assets/explosion.mp3")
-
+  loseSound=loadSound("assets/lose.mp3")
+  gameOver = loadImage("assets/game over.jpg")
 }
 
 function setup() {
@@ -74,68 +81,77 @@ player = createSprite(displayWidth-1150, displayHeight-300, 50, 50);
 
 function draw() {
   background(0); 
-
-  //moving the player up and down and making the game mobile compatible using touches
-if(keyDown("UP_ARROW")||touches.length>0){
-  player.y = player.y-30
-}
-if(keyDown("DOWN_ARROW")||touches.length>0){
- player.y = player.y+30
-}
-
-if(keyDown("RIGHT_ARROW")||touches.length>0){
-  player.x = player.x+30
- }
-
- if(keyDown("LEFT_ARROW")||touches.length>0){
-  player.x = player.x-30
- }
-//release bullets and change the image of shooter to shooting position when space is pressed
-if(keyWentDown("space")){
-  
-  player.addImage(shooter_shooting)
-  bullet=createSprite(player.x,player.y-20)
-  bullet.addImage(bullet_Img)
-  bullet.scale = 0.2;
-  bullet.velocityX=4
-  bulletGroup.add(bullet)
-  explosionSound.play()
- 
-}
-
-//player goes back to original standing image once we stop pressing the space bar
-else if(keyWentUp("space")){
-  player.addImage(shooterImg)
-}
-
-
-//destroy zombie when player touches it
-if(zombieGroup.isTouching(bulletGroup)){
- 
-
- for(var i=0;i<zombieGroup.length;i++){     
-      
-  if(zombieGroup[i].isTouching(bulletGroup)){
-       zombieGroup[i].destroy()
-       } 
- }
-}
-
-if(zombieGroup.isTouching(player)){
- 
-
-  for(var i=0;i<zombieGroup.length;i++){     
-       
-   if(zombieGroup[i].isTouching(player)){
-        lives=lives-1
-        } 
+ if(gameState===PLAY){
+  if(keyDown("UP_ARROW")||touches.length>0){
+    player.y = player.y-30
   }
- }
+  if(keyDown("DOWN_ARROW")||touches.length>0){
+   player.y = player.y+30
+  }
+  
+  if(keyDown("RIGHT_ARROW")||touches.length>0){
+    player.x = player.x+30
+   }
+  
+   if(keyDown("LEFT_ARROW")||touches.length>0){
+    player.x = player.x-30
+   }
+  //release bullets and change the image of shooter to shooting position when space is pressed
+  if(keyWentDown("space")){
+    
+    player.addImage(shooter_shooting)
+    bullet=createSprite(player.x,player.y-20)
+    bullet.addImage(bullet_Img)
+    bullet.scale = 0.2;
+    bullet.velocityX=4
+    bulletGroup.add(bullet)
+    explosionSound.play()
+   
+  }
+  
+  //player goes back to original standing image once we stop pressing the space bar
+  else if(keyWentUp("space")){
+    player.addImage(shooterImg)
+  }
+  
+  
+  //destroy zombie when player touches it
+  if(zombieGroup.isTouching(bulletGroup)){
+   
+  
+   for(var i=0;i<zombieGroup.length;i++){     
+        
+    if(zombieGroup[i].isTouching(bulletGroup)){
+         zombieGroup[i].destroy()
+         bulletGroup.destroyEach()
+         } 
+   }
+  }
+  if(zombieGroup.isTouching(player)){
+ 
 
-
-//calling the function to spawn zombies
-enemy();
+    for(var i=0;i<zombieGroup.length;i++){     
+          
+    if(zombieGroup[i].isTouching(player)){
+           lives=lives-1
+           zombieGroup[i].destroy()
+           }
+     }
+    }
+    enemy();
 showLife();
+ }
+ else if(gameState===END){
+   player.visible= false
+   zombieGroup.destroyEach();
+   bg.visible= false
+   imageMode(CENTER)
+   image(gameOver,windowWidth/2,windowHeight/2,windowWidth,windowHeight)
+  
+ }
+if(keyDown("R")){
+  reset()
+}
 drawSprites();
 }
 
@@ -152,7 +168,7 @@ function enemy(){
     zombie.scale = 0.15
     zombie.velocityX = -3
     zombie.debug= false
-    zombie.setCollider("rectangle",0,0,500,500)
+    zombie.setCollider("rectangle",0,0,500,800)
    
     zombie.lifetime = 400
    zombieGroup.add(zombie)
@@ -160,16 +176,33 @@ function enemy(){
 }
 
 function showLife(){
- if(lives<3&&lives>1){
+  if(lives>=3){
+    heart1.visible= false
+   heart2.visible= false
+   heart3.visible = true
+  }
+else if(lives<3&&lives>1){
    heart1.visible= false
    heart2.visible= true
    heart3.visible = false
  }
- if(lives<2&&lives>0){
+ else if(lives<2&&lives>0){
   heart1.visible= true
   heart2.visible= false
   heart3.visible = false
 }
+else if(lives<1){
+  gameState=END;
+  heart1.visible= false
+}
+}
+function reset(){
+  gameState=PLAY;
+  bg.visible= true
+  player.visible= true
+  lives=3
+  
+  
 }
 
 
